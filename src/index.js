@@ -3,12 +3,12 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-07-28 18:10:16
+ * @LastEditTime: 2023-07-28 18:34:56
  * @Description: 生成水印
  */
 
 const defaultOptions = {
-  id: 'watermark', //水印总体的id
+  id: 'x-watermark', //水印总体的id
   top: 0, //水印起始 top 位置
   left: 0, //水印起始 left 位置
   rows: 0, //水印行数
