@@ -117,17 +117,17 @@ declare module "@xpyjs/watermark" {
      * - 不传参，直接实例化一个空水印对象，可以后续调用 init 方法
      * - 支持直接初始化，传参等同于 init 方法
      */
-    constructor(str?: string | null, opts?: Options);
+    constructor(str?: string | null, opts?: Partial<Options>);
 
     /**
      * 初始化水印。只会添加一次
      */
-    init(str: string, opts: Options): Watermark;
+    init(str: string, opts: Partial<Options>): Watermark;
 
     /**
      * 重载水印。不传参则使用上一次的参数
      */
-    reload(str: string, opts?: Options): Watermark;
+    reload(str: string, opts?: Partial<Options>): Watermark;
 
     /**
      * 移除水印
