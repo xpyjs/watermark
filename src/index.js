@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-07-28 16:33:51
+ * @LastEditTime: 2023-07-28 18:10:16
  * @Description: 生成水印
  */
 
@@ -123,9 +123,11 @@ const setWatermark = (str, options) => {
   const lineHeight = options.fontsize * 1.5;
 
   // 如果 mode 是 stagger，space 增大两倍
+  let spaceX = options.xSpace;
+  let spaceY = options.ySpace;
   if (['stagger', 's'].includes(options.mode)) {
-    options.xSpace *= 2;
-    options.ySpace *= 2;
+    spaceX = options.xSpace * 2;
+    spaceY = options.ySpace * 2;
   }
 
   // 角度在 -90 ~ 90 之间
@@ -188,8 +190,8 @@ const setWatermark = (str, options) => {
 
   //设置画布的长宽。包含水印之间的间隔（后续长宽按照 options 中计算）
   const ratio = window.devicePixelRatio || 1;
-  canvas.width = (options.width + options.xSpace) * ratio;
-  canvas.height = (options.height + options.ySpace) * ratio;
+  canvas.width = (options.width + spaceX) * ratio;
+  canvas.height = (options.height + spaceY) * ratio;
 
   //缩放当前绘图至更大或更小
   context.scale(ratio, ratio);
@@ -267,8 +269,8 @@ const setWatermark = (str, options) => {
     case 's':
       div.style.backgroundImage = `url(${base64Url}), url(${base64Url})`;
       div.style.backgroundRepeat = 'repeat, repeat';
-      div.style.backgroundPosition = `0 0, ${(options.width + options.xSpace) / 2
-        }px ${(options.height + options.ySpace) / 2}px`;
+      div.style.backgroundPosition = `0 0, ${(options.width + spaceX) / 2
+        }px ${(options.height + spaceY) / 2}px`;
       break;
     case 'normal':
     case 'n':
@@ -277,7 +279,7 @@ const setWatermark = (str, options) => {
   }
 
   // 最后设置背景大小
-  div.style.backgroundSize = `${options.width + options.xSpace}px ${options.height + options.ySpace
+  div.style.backgroundSize = `${options.width + spaceX}px ${options.height + spaceY
     }px`;
 
   wmContainer.appendChild(div);
