@@ -1,4 +1,4 @@
-declare namespace XWatermark {
+declare module "@xpyjs/watermark" {
   interface Options {
     /**
      * 水印总体的id
@@ -95,7 +95,7 @@ declare namespace XWatermark {
   /**
    * 水印对象
    */
-  class Watermark {
+  export default class Watermark {
     /**
      * 生成的水印 base64 图片
      */
@@ -135,5 +135,3 @@ declare namespace XWatermark {
     remove(): boolean;
   }
 }
-
-export = XWatermark;
