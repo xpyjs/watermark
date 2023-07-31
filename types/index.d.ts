@@ -29,6 +29,10 @@ declare module "@xpyjs/watermark" {
      */
     ySpace: number;
     /**
+     * 水印大小的倍数，可以用来做高清适配
+     */
+    ratio: number;
+    /**
      * 水印字体
      */
     font: string;

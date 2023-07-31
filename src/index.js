@@ -3,28 +3,31 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-07-28 18:34:56
+ * @LastEditTime: 2023-07-31 17:45:13
  * @Description: 生成水印
  */
 
+const __DEV__ = true;
+
 const defaultOptions = {
-  id: 'x-watermark', //水印总体的id
+  id: "x-watermark", //水印总体的id
   top: 0, //水印起始 top 位置
   left: 0, //水印起始 left 位置
   rows: 0, //水印行数
   cols: 0, //水印列数
   xSpace: 50, //水印x轴间隔
   ySpace: 50, //水印y轴间隔
-  font: 'Helvetica Neue, Arial, MS YaHei', //水印字体
-  weight: 'normal', //水印字体粗细
-  color: 'black', //水印字体颜色
+  ratio: 1, //大小的倍数，可以用来做高清适配
+  font: "Helvetica Neue, Arial, MS YaHei", //水印字体
+  weight: "normal", //水印字体粗细
+  color: "black", //水印字体颜色
   fontsize: 16, //水印字体大小
   alpha: 0.1, //水印透明度，要求设置在大于等于0.005
   angle: -15, //水印倾斜度数
   zIndex: 9999, //水印层级
-  width: 'auto', //水印宽度。数字(含数字型字符，如 '90')或者auto(默认)
-  height: 'auto', //水印长度。数字(含数字型字符，如 '90')或者auto(默认)
-  mode: 'n', //平铺模式。支持: normal(默认，简写n) | horizontal(横向平铺，h、x) | vertical(纵向平铺， v、y) | stagger(交错，s)
+  width: "auto", //水印宽度。数字(含数字型字符，如 '90')或者auto(默认)
+  height: "auto", //水印长度。数字(含数字型字符，如 '90')或者auto(默认)
+  mode: "n", //平铺模式。支持: normal(默认，简写n) | horizontal(横向平铺，h、x) | vertical(纵向平铺， v、y) | stagger(交错，s)
   parentNode: document.body, //水印插件挂载的父元素element,不输入则默认挂在body上
   observer: false, // 是否观察父元素变化，自动更新水印
   observerNode: null // 要观察的元素，不传则默认为 parentNode
@@ -55,15 +58,15 @@ function setCtxFont(ctx, options) {
   //设置填充绘画的颜色、渐变或者模式
   ctx.fillStyle = options.color;
   //设置文本内容的当前对齐方式
-  ctx.textAlign = 'left';
+  ctx.textAlign = "left";
   //设置在绘制文本时使用的当前文本基线
-  ctx.textBaseline = 'bottom';
+  ctx.textBaseline = "bottom";
 }
 
 // 高度自动时，计算行数
 const calculateLines = (ctx, text, maxWidth) => {
-  const words = text.split('');
-  let line = '';
+  const words = text.split("");
+  let line = "";
   let lines = 0;
   for (let i = 0; i < words.length; i++) {
     const testLine = line + words[i];
@@ -83,8 +86,8 @@ function drawText(ctx, text, x, y, maxWidth, lineHeight, rotate) {
   ctx.translate(x, y);
   ctx.rotate((rotate * Math.PI) / 180);
 
-  const words = text.split('');
-  let line = '';
+  const words = text.split("");
+  let line = "";
   const indent = lineHeight * Math.sin((rotate * Math.PI) / 180);
   let lineNum = rotate < 0 ? -1 : 0;
 
@@ -113,11 +116,22 @@ function drawText(ctx, text, x, y, maxWidth, lineHeight, rotate) {
  * @returns base64
  */
 const setWatermark = (str, options) => {
-  const id = options.id || 'watermark';
+  const id = options.id || "watermark";
   const dom = options.parentNode || document.body;
 
   // 如果已经存在水印，则先删除
   deleteElement(id, dom);
+
+  // 根据倍数计算各种数值
+  if (typeof options.ratio === "number" && options.ratio !== 1) {
+    options.top *= options.ratio;
+    options.left *= options.ratio;
+    options.xSpace *= options.ratio;
+    options.ySpace *= options.ratio;
+    options.fontsize *= options.ratio;
+
+    // *下面单独计算宽高
+  }
 
   // lineHeight
   const lineHeight = options.fontsize * 1.5;
@@ -125,7 +139,7 @@ const setWatermark = (str, options) => {
   // 如果 mode 是 stagger，space 增大两倍
   let spaceX = options.xSpace;
   let spaceY = options.ySpace;
-  if (['stagger', 's'].includes(options.mode)) {
+  if (["stagger", "s"].includes(options.mode)) {
     spaceX = options.xSpace * 2;
     spaceY = options.ySpace * 2;
   }
@@ -134,27 +148,27 @@ const setWatermark = (str, options) => {
   // options.angle = options.angle % 90;
 
   //创建一个画布
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
 
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
   if (context === null) {
     console.error(
       "[Watermark] load error. Canvas Context is null. You'r browser may not support canvas."
     );
-    return '';
+    return "";
   }
 
   setCtxFont(context, options);
 
   // 如果宽高是 auto，那么要先计算 canvas 的宽高
-  if (typeof options.width === 'string') {
+  if (typeof options.width === "string") {
     // 先转数字，如果是一个 '100' 这样的字符串，可以转成数字使用
     // 如果转换失败，那么就是 auto，需要后续计算
     const w = Number(options.width);
     if (!isNaN(w)) {
-      options.width = w;
+      options.width = w * options.ratio;
     } else {
-      if (options.width === 'auto') {
+      if (options.width === "auto") {
         // 通过 measureText 计算宽度
         const metrics = context.measureText(str);
         options.width =
@@ -164,16 +178,18 @@ const setWatermark = (str, options) => {
         console.warn(
           "[Watermark] width is not a number or 'auto'. Please check your options."
         );
-        return '';
+        return "";
       }
     }
+  } else {
+    options.width *= options.ratio;
   }
-  if (typeof options.height === 'string') {
+  if (typeof options.height === "string") {
     const h = Number(options.height);
     if (!isNaN(h)) {
-      options.height = h;
+      options.height = h * options.ratio;
     } else {
-      if (options.height === 'auto') {
+      if (options.height === "auto") {
         // options.height = lineHeight * str.split('\n').length;
         const lines = calculateLines(context, str, options.width);
         options.height =
@@ -183,9 +199,11 @@ const setWatermark = (str, options) => {
         console.warn(
           "[Watermark] height is not a number or 'auto'. Please check your options."
         );
-        return '';
+        return "";
       }
     }
+  } else {
+    options.height *= options.ratio;
   }
 
   //设置画布的长宽。包含水印之间的间隔（后续长宽按照 options 中计算）
@@ -201,39 +219,42 @@ const setWatermark = (str, options) => {
   setCtxFont(context, options);
 
   // [test] 给整个画布添加一个红色边框
-  // context.strokeStyle = 'red';
-  // context.strokeRect(0, 0, canvas.width, canvas.height);
+  if (__DEV__) {
+    context.strokeStyle = "red";
+    context.strokeRect(0, 0, canvas.width, canvas.height);
+  }
+
   //在画布上绘制填色的文本（输出的文本，开始绘制文本的X坐标位置，开始绘制文本的Y坐标位置）。默认从画布的左中开始
   drawText(
     context,
     str,
     0,
     (options.angle < 0 ? 1 : 0) *
-    options.width *
-    Math.sin((Math.abs(options.angle) * Math.PI) / 180) +
-    lineHeight * (4 / 5), // bottom 对齐
+      options.width *
+      Math.sin((Math.abs(options.angle) * Math.PI) / 180) +
+      lineHeight * (4 / 5), // bottom 对齐
     options.width,
     lineHeight,
     options.angle
   );
 
   // 生成base64位图片
-  const base64Url = canvas.toDataURL('image/png');
+  const base64Url = canvas.toDataURL("image/png");
 
   if (
     dom !== document.body &&
-    (dom.style.position === '' || dom.style.position === 'static')
+    (dom.style.position === "" || dom.style.position === "static")
   ) {
-    dom.style.position = 'relative';
+    dom.style.position = "relative";
   }
 
-  const wmContainer = document.createElement('div');
+  const wmContainer = document.createElement("div");
   wmContainer.id = id;
-  wmContainer.style.pointerEvents = 'none';
-  wmContainer.style.overflow = 'hidden';
-  wmContainer.style.top = '0';
-  wmContainer.style.left = '0';
-  wmContainer.style.position = dom === document.body ? 'fixed' : 'absolute';
+  wmContainer.style.pointerEvents = "none";
+  wmContainer.style.overflow = "hidden";
+  wmContainer.style.top = "0";
+  wmContainer.style.left = "0";
+  wmContainer.style.position = dom === document.body ? "fixed" : "absolute";
   wmContainer.style.zIndex = `${options.zIndex}`;
   wmContainer.style.opacity = `${options.alpha}`;
   wmContainer.style.paddingTop = `${options.top}px`;
@@ -241,46 +262,54 @@ const setWatermark = (str, options) => {
   wmContainer.style.width =
     (dom.clientWidth || document.documentElement.clientWidth) -
     options.left +
-    'px';
+    "px";
   wmContainer.style.height =
     (dom.clientHeight || document.documentElement.clientHeight) -
     options.top +
-    'px';
+    "px";
 
-  const div = document.createElement('div');
-  div.style.width = '100%';
-  div.style.height = '100%';
+  const div = document.createElement("div");
+  div.style.width = "100%";
+  div.style.height = "100%";
 
   // 根据模式设置背景
   div.style.backgroundImage = `url(${base64Url})`;
-  div.style.backgroundPosition = '0 0';
+  div.style.backgroundPosition = "0 0";
   switch (options.mode) {
-    case 'horizontal':
-    case 'h':
-    case 'x':
-      div.style.backgroundRepeat = 'repeat-x';
+    case "horizontal":
+    case "h":
+    case "x":
+      div.style.backgroundRepeat = "repeat-x";
       break;
-    case 'vertical':
-    case 'v':
-    case 'y':
-      div.style.backgroundRepeat = 'repeat-y';
+    case "vertical":
+    case "v":
+    case "y":
+      div.style.backgroundRepeat = "repeat-y";
       break;
-    case 'stagger':
-    case 's':
+    case "stagger":
+    case "s":
       div.style.backgroundImage = `url(${base64Url}), url(${base64Url})`;
-      div.style.backgroundRepeat = 'repeat, repeat';
-      div.style.backgroundPosition = `0 0, ${(options.width + spaceX) / 2
-        }px ${(options.height + spaceY) / 2}px`;
+      div.style.backgroundRepeat = "repeat, repeat";
+      div.style.backgroundPosition = `0 0, ${(options.width + spaceX) / 2}px ${
+        (options.height + spaceY) / 2
+      }px`;
       break;
-    case 'normal':
-    case 'n':
+    case "normal":
+    case "n":
     default:
-      div.style.backgroundRepeat = 'repeat';
+      div.style.backgroundRepeat = "repeat";
   }
 
   // 最后设置背景大小
-  div.style.backgroundSize = `${options.width + spaceX}px ${options.height + spaceY
-    }px`;
+  div.style.backgroundSize = `${options.width + spaceX}px ${
+    options.height + spaceY
+  }px`;
+
+  // [test]
+  if (__DEV__) {
+    div.style.backgroundRepeat = "no-repeat";
+    wmContainer.style.opacity = "1";
+  }
 
   wmContainer.appendChild(div);
   dom.appendChild(wmContainer);
@@ -292,12 +321,12 @@ class Watermark {
   /**
    * 生成的水印 base64 图片
    */
-  base64 = '';
+  base64 = "";
 
   /**
    * 水印文字内容
    */
-  content = '';
+  content = "";
 
   /**
    * 水印配置项
@@ -340,12 +369,12 @@ class Watermark {
             // 在回调函数中检查每个 mutation
             mutations.forEach(mutation => {
               // 如果属性有变化
-              if (mutation.type === 'attributes') {
+              if (mutation.type === "attributes") {
                 // 如果是宽高发生了变化
                 if (
-                  mutation.attributeName === 'clientWidth' ||
-                  mutation.attributeName === 'clientHeight' ||
-                  mutation.attributeName === 'style'
+                  mutation.attributeName === "clientWidth" ||
+                  mutation.attributeName === "clientHeight" ||
+                  mutation.attributeName === "style"
                 ) {
                   this.reload();
                 }
@@ -358,19 +387,19 @@ class Watermark {
           observer.observe(target, { attributes: true });
         } else {
           console.warn(
-            'You have set up observer update, but it seems that your current env does not support MutationObserver. You may need to refresh manually.'
+            "You have set up observer update, but it seems that your current env does not support MutationObserver. You may need to refresh manually."
           );
         }
       }
     };
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', doIt);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", doIt);
     } else {
       doIt();
     }
 
-    window.addEventListener('resize', doIt);
+    window.addEventListener("resize", doIt);
 
     return this;
   }
@@ -381,7 +410,7 @@ class Watermark {
    * @param {object | undefined} opts
    */
   reload(str, opts) {
-    if (opts && typeof opts === 'object') {
+    if (opts && typeof opts === "object") {
       this.options = Object.assign({}, defaultOptions, opts);
     }
     this.remove();
