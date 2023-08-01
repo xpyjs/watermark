@@ -94,6 +94,10 @@ declare module "@xpyjs/watermark" {
      *  要观察的元素，不传则默认为 parentNode
      */
     observerNode: Element | null;
+    /**
+     * 防止水印被移除
+     */
+    prevent: boolean;
   }
 
   /**

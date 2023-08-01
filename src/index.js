@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-01 11:13:01
+ * @LastEditTime: 2023-08-01 15:08:20
  * @Description: 生成水印
  */
 
@@ -32,7 +32,8 @@ const defaultOptions = {
   mode: "n", //平铺模式。支持: normal(默认，简写n) | horizontal(横向平铺，h、x) | vertical(纵向平铺， v、y) | stagger(交错，s)
   parentNode: document.body, //水印插件挂载的父元素element,不输入则默认挂在body上
   observer: false, // 是否观察父元素变化，自动更新水印
-  observerNode: null // 要观察的元素，不传则默认为 parentNode
+  observerNode: null, // 要观察的元素，不传则默认为 parentNode
+  prevent: false // 是否防止水印被篡改
 };
 
 function deleteElement(id, parent) {
@@ -305,6 +306,9 @@ const setWatermark = (str, options) => {
 };
 
 class Watermark {
+  _observerObs = null;
+  _preventObs = null;
+
   /**
    * 生成的水印 base64 图片
    */
@@ -318,7 +322,7 @@ class Watermark {
   /**
    * 水印配置项
    */
-  options = Object.assign({}, defaultOptions);
+  _options = Object.assign({}, defaultOptions);
 
   /**
    * Creates an instance of Watermark.
@@ -341,71 +345,16 @@ class Watermark {
    * @param {object} opts
    */
   init(str, opts = {}) {
-    this.options = Object.assign({}, defaultOptions, opts);
-
-    const doIt = () => {
-      const o = Object.assign({}, this.options);
-      // 根据倍数计算各种数值
-      if (typeof o.ratio === "number" && o.ratio !== 1) {
-        o.top *= o.ratio;
-        o.left *= o.ratio;
-        o.xSpace *= o.ratio;
-        o.ySpace *= o.ratio;
-        o.fontsize *= o.ratio;
-
-        // 单独计算宽高
-        if (typeof o.width === "number") {
-          o.width *= o.ratio;
-        }
-
-        if (typeof o.height === "number") {
-          o.height *= o.ratio;
-        }
-      }
-
-      this.base64 = setWatermark(str, o);
-      this.content = str;
-
-      if (o.observer) {
-        const MutationObserver =
-          window.MutationObserver || window.WebKitMutationObserver;
-
-        if (MutationObserver) {
-          const observer = new MutationObserver(mutations => {
-            // 在回调函数中检查每个 mutation
-            mutations.forEach(mutation => {
-              // 如果属性有变化
-              if (mutation.type === "attributes") {
-                // 如果是宽高发生了变化
-                if (
-                  mutation.attributeName === "clientWidth" ||
-                  mutation.attributeName === "clientHeight" ||
-                  mutation.attributeName === "style"
-                ) {
-                  this.reload();
-                }
-              }
-            });
-          });
-
-          // 选择目标节点
-          const target = o.observerNode || o.parentNode;
-          observer.observe(target, { attributes: true });
-        } else {
-          console.warn(
-            `${WARN} You have set 'options.observer', but it seems that your current env does not support MutationObserver. You may need to refresh manually.`
-          );
-        }
-      }
-    };
+    this._options = Object.assign({}, defaultOptions, opts);
+    this.content = str;
 
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", doIt);
+      document.addEventListener("DOMContentLoaded", () => this._do());
     } else {
-      doIt();
+      this._do();
     }
 
-    window.addEventListener("resize", doIt);
+    window.addEventListener("resize", () => this._do());
 
     return this;
   }
@@ -417,17 +366,131 @@ class Watermark {
    */
   reload(str, opts) {
     if (opts && typeof opts === "object") {
-      this.options = Object.assign({}, defaultOptions, opts);
+      this._options = Object.assign({}, defaultOptions, opts);
     }
     this.remove();
-    return this.init(str || this.content, this.options);
+    return this.init(str || this.content, this._options);
   }
 
   /**
    * 移除水印
    */
   remove() {
-    return deleteElement(this.options.id);
+    this._dispose();
+
+    return deleteElement(this._options.id);
+  }
+
+  _do() {
+    const o = Object.assign({}, this._options);
+
+    // 根据倍数计算各种数值
+    if (typeof o.ratio === "number" && o.ratio !== 1) {
+      o.top *= o.ratio;
+      o.left *= o.ratio;
+      o.xSpace *= o.ratio;
+      o.ySpace *= o.ratio;
+      o.fontsize *= o.ratio;
+
+      // 单独计算宽高
+      if (typeof o.width === "number") {
+        o.width *= o.ratio;
+      }
+
+      if (typeof o.height === "number") {
+        o.height *= o.ratio;
+      }
+    }
+
+    this.base64 = setWatermark(this.content, o);
+
+    if (o.observer) {
+      const MutationObserver =
+        window.MutationObserver || window.WebKitMutationObserver;
+
+      if (MutationObserver) {
+        this._observerObs = new MutationObserver(mutations => {
+          // 在回调函数中检查每个 mutation
+          mutations.forEach(mutation => {
+            // 如果属性有变化
+            if (mutation.type === "attributes") {
+              // 如果是宽高发生了变化
+              if (
+                mutation.attributeName === "clientWidth" ||
+                mutation.attributeName === "clientHeight" ||
+                mutation.attributeName === "style"
+              ) {
+                this.reload();
+              }
+            }
+          });
+        });
+
+        // 选择目标节点
+        const target = o.observerNode || o.parentNode;
+        this._observerObs.observe(target, { attributes: true });
+      } else {
+        console.warn(
+          `${WARN} You have set 'options.observer', but it seems that your current env does not support MutationObserver. You may need to refresh manually.`
+        );
+      }
+    }
+
+    if (o.prevent) {
+      // 监听水印修改，防止被篡改
+      const MutationObserver =
+        window.MutationObserver || window.WebKitMutationObserver;
+
+      if (MutationObserver) {
+        this._preventObs = new MutationObserver(mutations => {
+          mutations.forEach(mutation => {
+            if (mutation.target.id === o.id) {
+              // 内容发生变化，重新生成水印
+              this.reload();
+            } else if (
+              mutation.type === "childList" &&
+              Array.from(mutation.removedNodes || []).find(n => n.id === o.id)
+            ) {
+              if (!document.getElementById(o.id)) {
+                // 如果水印被删除了，重新生成
+                this.reload();
+              }
+            }
+          });
+        });
+
+        // 选择目标节点
+        const target = o.parentNode || document.body;
+
+        this._observerObs.observe(target, {
+          attributes: true,
+          subtree: true,
+          childList: true,
+          characterData: true,
+          attributeOldValue: true,
+          characterDataOldValue: true,
+          attributeFilter: ["style"]
+        });
+      } else {
+        console.warn(
+          `${WARN} You have set 'options.prevent', but it seems that your current env does not support MutationObserver. You may need to do it manually.`
+        );
+      }
+    }
+  }
+
+  _dispose() {
+    if (this._observerObs) {
+      this._observerObs.disconnect();
+      this._observerObs = null;
+    }
+
+    if (this._preventObs) {
+      this._preventObs.disconnect();
+      this._preventObs = null;
+    }
+
+    window.removeEventListener("resize", () => this._do());
   }
 }
 
