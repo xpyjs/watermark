@@ -3,14 +3,16 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-07-31 17:45:13
+ * @LastEditTime: 2023-08-01 10:37:48
  * @Description: 生成水印
  */
 
-const __DEV__ = true;
+const __DEV__ = false;
+const ID = "x-watermark";
+const WARN = "[Watermark]";
 
 const defaultOptions = {
-  id: "x-watermark", //水印总体的id
+  id: ID, //水印总体的id
   top: 0, //水印起始 top 位置
   left: 0, //水印起始 left 位置
   rows: 0, //水印行数
@@ -42,7 +44,7 @@ function deleteElement(id, parent) {
       parentNode?.removeChild(dom);
       return true;
     } catch (error) {
-      console.warn(`Remove watermark dom [${id}] failed:`, error);
+      console.warn(`${WARN} Remove watermark dom [${id}] failed:`, error);
     }
 
     return false;
@@ -116,7 +118,7 @@ function drawText(ctx, text, x, y, maxWidth, lineHeight, rotate) {
  * @returns base64
  */
 const setWatermark = (str, options) => {
-  const id = options.id || "watermark";
+  const id = options.id || ID;
   const dom = options.parentNode || document.body;
 
   // 如果已经存在水印，则先删除
@@ -153,7 +155,7 @@ const setWatermark = (str, options) => {
   const context = canvas.getContext("2d");
   if (context === null) {
     console.error(
-      "[Watermark] load error. Canvas Context is null. You'r browser may not support canvas."
+      `${WARN} load error. Canvas Context is null. You'r browser may not support canvas.`
     );
     return "";
   }
@@ -176,7 +178,7 @@ const setWatermark = (str, options) => {
           lineHeight * Math.sin((Math.abs(options.angle) * Math.PI) / 180);
       } else {
         console.warn(
-          "[Watermark] width is not a number or 'auto'. Please check your options."
+          `${WARN} width is not a number or 'auto'. Please check your options.`
         );
         return "";
       }
@@ -197,7 +199,7 @@ const setWatermark = (str, options) => {
           options.width * Math.sin((Math.abs(options.angle) * Math.PI) / 180);
       } else {
         console.warn(
-          "[Watermark] height is not a number or 'auto'. Please check your options."
+          `${WARN} height is not a number or 'auto'. Please check your options.`
         );
         return "";
       }
@@ -387,7 +389,7 @@ class Watermark {
           observer.observe(target, { attributes: true });
         } else {
           console.warn(
-            "You have set up observer update, but it seems that your current env does not support MutationObserver. You may need to refresh manually."
+            `${WARN} You have set 'options.observer', but it seems that your current env does not support MutationObserver. You may need to refresh manually.`
           );
         }
       }
