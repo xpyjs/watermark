@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-01 10:37:48
+ * @LastEditTime: 2023-08-01 11:13:01
  * @Description: 生成水印
  */
 
@@ -124,17 +124,6 @@ const setWatermark = (str, options) => {
   // 如果已经存在水印，则先删除
   deleteElement(id, dom);
 
-  // 根据倍数计算各种数值
-  if (typeof options.ratio === "number" && options.ratio !== 1) {
-    options.top *= options.ratio;
-    options.left *= options.ratio;
-    options.xSpace *= options.ratio;
-    options.ySpace *= options.ratio;
-    options.fontsize *= options.ratio;
-
-    // *下面单独计算宽高
-  }
-
   // lineHeight
   const lineHeight = options.fontsize * 1.5;
 
@@ -183,8 +172,6 @@ const setWatermark = (str, options) => {
         return "";
       }
     }
-  } else {
-    options.width *= options.ratio;
   }
   if (typeof options.height === "string") {
     const h = Number(options.height);
@@ -204,8 +191,6 @@ const setWatermark = (str, options) => {
         return "";
       }
     }
-  } else {
-    options.height *= options.ratio;
   }
 
   //设置画布的长宽。包含水印之间的间隔（后续长宽按照 options 中计算）
@@ -359,10 +344,29 @@ class Watermark {
     this.options = Object.assign({}, defaultOptions, opts);
 
     const doIt = () => {
-      this.base64 = setWatermark(str, this.options);
+      const o = Object.assign({}, this.options);
+      // 根据倍数计算各种数值
+      if (typeof o.ratio === "number" && o.ratio !== 1) {
+        o.top *= o.ratio;
+        o.left *= o.ratio;
+        o.xSpace *= o.ratio;
+        o.ySpace *= o.ratio;
+        o.fontsize *= o.ratio;
+
+        // 单独计算宽高
+        if (typeof o.width === "number") {
+          o.width *= o.ratio;
+        }
+
+        if (typeof o.height === "number") {
+          o.height *= o.ratio;
+        }
+      }
+
+      this.base64 = setWatermark(str, o);
       this.content = str;
 
-      if (this.options.observer) {
+      if (o.observer) {
         const MutationObserver =
           window.MutationObserver || window.WebKitMutationObserver;
 
@@ -385,7 +389,7 @@ class Watermark {
           });
 
           // 选择目标节点
-          const target = this.options.observerNode || this.options.parentNode;
+          const target = o.observerNode || o.parentNode;
           observer.observe(target, { attributes: true });
         } else {
           console.warn(
