@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Example</title>
+
+    <style>
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 生成5个背景颜色类，用不同颜色 */
+        .box-1 {
+            background-color: #f00;
+        }
+
+        .box-2 {
+            background-color: #0f0;
+        }
+
+        .box-3 {
+            background-color: #00f;
+        }
+
+        .box-4 {
+            background-color: #ff0;
+        }
+
+        .box-5 {
+            background-color: #0ff;
+        }
+
+        div {
+            margin: 20px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="box-1 center" style="width: 200px; height: 200px;">1</div>
+    <div class="box-2 center" style="height: 200px">2</div>
+    <div class="box-3 center" style="width: 200px; height: 100px; display: inline-flex;">3</div>
+    <div class="box-4 center" style="width: 200px; height: 100px; display: inline-flex;">4</div>
+    <div class="box-5 center" style="height: 100px;">5</div>
+
+    <script src="/dist/index.js"></script>
+
+    <script>
+        const watermark = new XWatermark.XWatermark();
+
+        watermark.init('watermark', {
+            prevent: true
+        });
+
+        const wm1 = new XWatermark.XWatermark();
+        wm1.init('box-1', {
+            id: 'box-1',
+            parentSelector: '.box-1',
+            xSpace: 20,
+            ySpace: 20,
+            top: 50,
+            width: 30
+        });
+    </script>
+</body>
+
+</html>

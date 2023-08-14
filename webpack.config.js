@@ -1,14 +1,14 @@
-const path = require('path');
-const TerserPlugin = require('terser-webpack-plugin');
+const path = require("path");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
   mode: "production",
-  entry: './src/index.js',
+  entry: "./src/index.js",
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js',
-    library: 'XWatermark', // global variable name
-    libraryTarget: 'umd',
+    path: path.resolve(__dirname, "dist"),
+    filename: "index.js",
+    library: "XWatermark", // global variable name
+    libraryTarget: "umd",
     umdNamedDefine: true
   },
   module: {
@@ -17,10 +17,13 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: 'babel-loader',
+          loader: "babel-loader",
           options: {
-            presets: ['@babel/preset-env'],
-            plugins: ['@babel/plugin-proposal-optional-chaining', '@babel/plugin-proposal-class-properties']
+            presets: ["@babel/preset-env"],
+            plugins: [
+              "@babel/plugin-proposal-optional-chaining",
+              "@babel/plugin-proposal-class-properties"
+            ]
           }
         }
       }
@@ -28,15 +31,29 @@ module.exports = {
   },
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin({
-      terserOptions: {
-        format: {
-          comments: false,
-        },
-        compress: {
-          drop_console: true,
-        },
-      },
-    })],
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          format: {
+            comments: false
+          },
+          compress: {
+            drop_console: true
+          }
+        }
+      })
+    ]
   },
+  devServer: {
+    static: [
+      {
+        directory: path.join(__dirname, "example")
+      },
+      {
+        directory: path.join(__dirname, "dist"),
+        publicPath: "/dist/"
+      }
+    ],
+    port: 9000
+  }
 };
