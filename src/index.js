@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-01 15:08:20
+ * @LastEditTime: 2023-08-14 14:01:24
  * @Description: 生成水印
  */
 
@@ -31,17 +31,18 @@ const defaultOptions = {
   height: "auto", //水印长度。数字(含数字型字符，如 '90')或者auto(默认)
   mode: "n", //平铺模式。支持: normal(默认，简写n) | horizontal(横向平铺，h、x) | vertical(纵向平铺， v、y) | stagger(交错，s)
   parentNode: document.body, //水印插件挂载的父元素element,不输入则默认挂在body上
+  parentSelector: "", // 挂载的父元素选择器，优先级高于 parentNode
   observer: false, // 是否观察父元素变化，自动更新水印
   observerNode: null, // 要观察的元素，不传则默认为 parentNode
   prevent: false // 是否防止水印被篡改
 };
 
-function deleteElement(id, parent) {
+function deleteElement(id) {
   const dom = document.getElementById(id);
-  const parentNode = parent || dom?.parentNode || document.body;
 
   if (dom) {
     try {
+      const parentNode = dom.parentNode;
       parentNode?.removeChild(dom);
       return true;
     } catch (error) {
@@ -120,10 +121,13 @@ function drawText(ctx, text, x, y, maxWidth, lineHeight, rotate) {
  */
 const setWatermark = (str, options) => {
   const id = options.id || ID;
-  const dom = options.parentNode || document.body;
+  const dom =
+    (options.parentSelector
+      ? document.querySelector(options.parentSelector)
+      : options.parentNode) || document.body;
 
   // 如果已经存在水印，则先删除
-  deleteElement(id, dom);
+  deleteElement(id);
 
   // lineHeight
   const lineHeight = options.fontsize * 1.5;
@@ -427,7 +431,11 @@ class Watermark {
         });
 
         // 选择目标节点
-        const target = o.observerNode || o.parentNode;
+        const target =
+          o.observerNode ||
+          (o.parentSelector
+            ? document.querySelector(o.parentSelector)
+            : o.parentNode);
         this._observerObs.observe(target, { attributes: true });
       } else {
         console.warn(
@@ -460,7 +468,10 @@ class Watermark {
         });
 
         // 选择目标节点
-        const target = o.parentNode || document.body;
+        const target =
+          (o.parentSelector
+            ? document.querySelector(o.parentSelector)
+            : o.parentNode) || document.body;
 
         this._observerObs.observe(target, {
           attributes: true,
@@ -494,4 +505,5 @@ class Watermark {
   }
 }
 
+export const XWatermark = Watermark;
 export default Watermark;
