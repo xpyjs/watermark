@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-14 14:01:24
+ * @LastEditTime: 2023-08-14 14:02:36
  * @Description: 生成水印
  */
 
@@ -473,7 +473,7 @@ class Watermark {
             ? document.querySelector(o.parentSelector)
             : o.parentNode) || document.body;
 
-        this._observerObs.observe(target, {
+        this._preventObs.observe(target, {
           attributes: true,
           subtree: true,
           childList: true,
