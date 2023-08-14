@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-14 14:02:36
+ * @LastEditTime: 2023-08-14 13:55:23
  * @Description: 生成水印
  */
 
@@ -246,6 +246,8 @@ const setWatermark = (str, options) => {
   wmContainer.style.overflow = "hidden";
   wmContainer.style.top = "0";
   wmContainer.style.left = "0";
+  wmContainer.style.margin = "0";
+  wmContainer.style.padding = "0";
   wmContainer.style.position = dom === document.body ? "fixed" : "absolute";
   wmContainer.style.zIndex = `${options.zIndex}`;
   wmContainer.style.opacity = `${options.alpha}`;
@@ -263,6 +265,8 @@ const setWatermark = (str, options) => {
   const div = document.createElement("div");
   div.style.width = "100%";
   div.style.height = "100%";
+  div.style.margin = "0";
+  div.style.padding = "0";
 
   // 根据模式设置背景
   div.style.backgroundImage = `url(${base64Url})`;
