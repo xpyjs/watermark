@@ -87,6 +87,10 @@ declare module "@xpyjs/watermark" {
      */
     parentNode: Element | null;
     /**
+     * 水印插件挂载的父元素选择器，与 `document.querySelector` 内容保持一致。 与 parentNode 二选一即可，优先级 parentSelector > parentNode
+     */
+    parentSelector: string;
+    /**
      *  是否观察父元素变化，自动更新水印
      */
     observer: boolean;
