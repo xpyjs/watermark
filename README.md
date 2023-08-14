@@ -1,8 +1,8 @@
 # X-Watermark
 
-<div style="text-align:center">
-  <img src="./logo.png" alt="X-Watermark" />
-</div>
+![X-Watermark](logo.png)
+
+![](https://img.shields.io/npm/v/@xpyjs/watermark.svg) ![](https://badgen.net/npm/dt/@xpyjs/watermark) ![](https://img.shields.io/npm/l/@xpyjs/watermark.svg)
 
 `X-Watermark` 是一款易用的 JavaScript `X-Watermark` ，通过简单的配置，就可以在网页的任何位置添加水印效果。
 
