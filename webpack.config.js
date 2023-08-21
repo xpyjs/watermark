@@ -38,7 +38,9 @@ module.exports = {
             comments: false
           },
           compress: {
-            drop_console: true
+            // drop_console: true,
+            drop_debugger: true,
+            pure_funcs: ["console.log"]
           }
         }
       })
@@ -54,6 +56,7 @@ module.exports = {
         publicPath: "/dist/"
       }
     ],
-    port: 9000
+    port: 9000,
+    hot: true
   }
 };
