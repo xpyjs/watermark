@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-14 13:55:23
+ * @LastEditTime: 2023-08-21 17:49:59
  * @Description: 生成水印
  */
 
@@ -242,6 +242,7 @@ const setWatermark = (str, options) => {
 
   const wmContainer = document.createElement("div");
   wmContainer.id = id;
+  wmContainer.classList.add("watermark-container");
   wmContainer.style.pointerEvents = "none";
   wmContainer.style.overflow = "hidden";
   wmContainer.style.top = "0";
@@ -263,6 +264,7 @@ const setWatermark = (str, options) => {
     "px";
 
   const div = document.createElement("div");
+  div.classList.add("watermark-content");
   div.style.width = "100%";
   div.style.height = "100%";
   div.style.margin = "0";
@@ -456,17 +458,34 @@ class Watermark {
       if (MutationObserver) {
         this._preventObs = new MutationObserver(mutations => {
           mutations.forEach(mutation => {
-            if (mutation.target.id === o.id) {
-              // 内容发生变化，重新生成水印
+            // 判断 className 是否包含 watermark-container 或 watermark-content
+            if (
+              mutation.type === "attributes" &&
+              mutation.attributeName === "style" &&
+              (mutation.target.className.includes("watermark-container") ||
+                mutation.target.className.includes("watermark-content"))
+            ) {
               this.reload();
             } else if (
-              mutation.type === "childList" &&
-              Array.from(mutation.removedNodes || []).find(n => n.id === o.id)
+              // 删除 class
+              mutation.type === "attributes" &&
+              mutation.attributeName === "class" &&
+              mutation.oldValue &&
+              (mutation.oldValue.includes("watermark-container") ||
+                mutation.oldValue.includes("watermark-content"))
             ) {
-              if (!document.getElementById(o.id)) {
-                // 如果水印被删除了，重新生成
-                this.reload();
-              }
+              this.reload();
+            } else if (
+              // 判断删除
+              mutation.type === "childList" &&
+              mutation.removedNodes.length > 0 &&
+              Array.from(mutation.removedNodes).filter(
+                node =>
+                  node.className.includes("watermark-container") ||
+                  node.className.includes("watermark-content")
+              ).length > 0
+            ) {
+              this.reload();
             }
           });
         });
@@ -484,7 +503,7 @@ class Watermark {
           characterData: true,
           attributeOldValue: true,
           characterDataOldValue: true,
-          attributeFilter: ["style"]
+          attributeFilter: ["style", "class"]
         });
       } else {
         console.warn(
