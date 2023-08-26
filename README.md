@@ -1,6 +1,12 @@
 # X-Watermark
 
-![X-Watermark](logo.png)
+
+<p align="center"> 
+   <img width="180" src="./logo.png" alt="logo">
+ </p> 
+ <br/>
+
+#![X-Watermark](logo.png)
 
 ![](https://img.shields.io/npm/v/@xpyjs/watermark.svg) ![](https://badgen.net/npm/dt/@xpyjs/watermark) ![](https://img.shields.io/npm/l/@xpyjs/watermark.svg)
 
