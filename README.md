@@ -6,9 +6,9 @@
 </p> 
 <br/>
 
-＜p align="center"＞
+<p align="center">
 ![](https://img.shields.io/npm/v/@xpyjs/watermark.svg) ![](https://badgen.net/npm/dt/@xpyjs/watermark) ![](https://img.shields.io/npm/l/@xpyjs/watermark.svg)
-＜/p＞
+</p>
 
 `X-Watermark` 是一款易用的 JavaScript `X-Watermark` ，通过简单的配置，就可以在网页的任何位置添加水印效果。
 
