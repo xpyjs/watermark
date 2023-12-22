@@ -3,13 +3,13 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-08-21 17:49:59
+ * @LastEditTime: 2023-12-22 14:48:16
  * @Description: 生成水印
  */
 
 const __DEV__ = false;
 const ID = "x-watermark";
-const WARN = "[Watermark]";
+const WARN = "[XWatermark]";
 
 const defaultOptions = {
   id: ID, //水印总体的id
@@ -462,8 +462,8 @@ class Watermark {
             if (
               mutation.type === "attributes" &&
               mutation.attributeName === "style" &&
-              (mutation.target.className.includes("watermark-container") ||
-                mutation.target.className.includes("watermark-content"))
+              (mutation.target?.className.includes("watermark-container") ||
+                mutation.target?.className.includes("watermark-content"))
             ) {
               this.reload();
             } else if (
@@ -471,8 +471,8 @@ class Watermark {
               mutation.type === "attributes" &&
               mutation.attributeName === "class" &&
               mutation.oldValue &&
-              (mutation.oldValue.includes("watermark-container") ||
-                mutation.oldValue.includes("watermark-content"))
+              (mutation.oldValue?.includes("watermark-container") ||
+                mutation.oldValue?.includes("watermark-content"))
             ) {
               this.reload();
             } else if (
@@ -481,8 +481,8 @@ class Watermark {
               mutation.removedNodes.length > 0 &&
               Array.from(mutation.removedNodes).filter(
                 node =>
-                  node.className.includes("watermark-container") ||
-                  node.className.includes("watermark-content")
+                  node.className?.includes("watermark-container") ||
+                  node.className?.includes("watermark-content")
               ).length > 0
             ) {
               this.reload();
