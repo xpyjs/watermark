@@ -3,16 +3,15 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-12-22 14:48:16
+ * @LastEditTime: 2023-12-25 18:03:53
  * @Description: 生成水印
  */
 
 const __DEV__ = false;
-const ID = "x-watermark";
 const WARN = "[XWatermark]";
 
 const defaultOptions = {
-  id: ID, //水印总体的id
+  id: "", //水印总体的id
   top: 0, //水印起始 top 位置
   left: 0, //水印起始 left 位置
   rows: 0, //水印行数
@@ -120,7 +119,7 @@ function drawText(ctx, text, x, y, maxWidth, lineHeight, rotate) {
  * @returns base64
  */
 const setWatermark = (str, options) => {
-  const id = options.id || ID;
+  const id = options.id;
   const dom =
     (options.parentSelector
       ? document.querySelector(options.parentSelector)
@@ -144,9 +143,9 @@ const setWatermark = (str, options) => {
   // options.angle = options.angle % 90;
 
   //创建一个画布
-  const canvas = document.createElement("canvas");
+  let canvas = document.createElement("canvas");
 
-  const context = canvas.getContext("2d");
+  let context = canvas.getContext("2d");
   if (context === null) {
     console.error(
       `${WARN} load error. Canvas Context is null. You'r browser may not support canvas.`
@@ -233,6 +232,11 @@ const setWatermark = (str, options) => {
   // 生成base64位图片
   const base64Url = canvas.toDataURL("image/png");
 
+  // 清除画布
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context = null;
+  canvas = null;
+
   if (
     dom !== document.body &&
     (dom.style.position === "" || dom.style.position === "static")
@@ -242,7 +246,7 @@ const setWatermark = (str, options) => {
 
   const wmContainer = document.createElement("div");
   wmContainer.id = id;
-  wmContainer.classList.add("watermark-container");
+  // wmContainer.classList.add("x-watermark-container");
   wmContainer.style.pointerEvents = "none";
   wmContainer.style.overflow = "hidden";
   wmContainer.style.top = "0";
@@ -264,7 +268,7 @@ const setWatermark = (str, options) => {
     "px";
 
   const div = document.createElement("div");
-  div.classList.add("watermark-content");
+  // div.classList.add("x-watermark-content");
   div.style.width = "100%";
   div.style.height = "100%";
   div.style.margin = "0";
@@ -355,7 +359,12 @@ class Watermark {
    * @param {object} opts
    */
   init(str, opts = {}) {
-    this._options = Object.assign({}, defaultOptions, opts);
+    this._options = Object.assign(
+      {},
+      defaultOptions,
+      { id: generateRandomId() },
+      opts
+    );
     this.content = str;
 
     if (document.readyState === "loading") {
@@ -366,6 +375,98 @@ class Watermark {
 
     window.addEventListener("resize", () => this._do());
 
+    if (this._options.observer) {
+      const ResizeObserver =
+        window.ResizeObserver || window.WebKitResizeObserver;
+
+      if (ResizeObserver) {
+        this._observerObs = new ResizeObserver(
+          throttle(entries => {
+            entries.forEach(entry => {
+              this._do();
+            });
+          }),
+          100
+        );
+
+        // 选择目标节点
+        const target =
+          this._options.observerNode ||
+          (this._options.parentSelector
+            ? document.querySelector(this._options.parentSelector)
+            : this._options.parentNode);
+        this._observerObs.observe(target, { attributes: true });
+      } else {
+        console.warn(
+          `${WARN} You have set 'options.observer', but it seems that your current env does not support ResizeObserver. You may need to refresh manually.`
+        );
+      }
+    }
+
+    if (this._options.prevent) {
+      // 监听水印修改，防止被篡改
+      const MutationObserver =
+        window.MutationObserver || window.WebKitMutationObserver;
+
+      if (MutationObserver) {
+        this._preventObs = new MutationObserver(
+          throttle(mutations => {
+            mutations.forEach(mutation => {
+              //   //   // 判断 className 是否包含 x-watermark-container 或 x-watermark-content
+              //   //   // if (
+              //   //   //   mutation.type === "attributes" &&
+              //   //   //   mutation.attributeName === "style" &&
+              //   //   //   (mutation.target?.className.includes("x-watermark-container") ||
+              //   //   //     mutation.target?.className.includes("x-watermark-content"))
+              //   //   // ) {
+              //   //   //   this._do();
+              //   //   // } else if (
+              //   //   //   // 删除 class
+              //   //   //   mutation.type === "attributes" &&
+              //   //   //   mutation.attributeName === "class" &&
+              //   //   //   mutation.oldValue &&
+              //   //   //   (mutation.oldValue?.includes("x-watermark-container") ||
+              //   //   //     mutation.oldValue?.includes("x-watermark-content"))
+              //   //   // ) {
+              //   //   //   this._do();
+              //   //   // } else if (
+              //   //   //   // 判断删除
+              //   //   //   mutation.type === "childList" &&
+              //   //   //   mutation.removedNodes.length > 0 &&
+              //   //   //   Array.from(mutation.removedNodes).filter(
+              //   //   //     node =>
+              //   //   //       node.className?.includes("x-watermark-container") ||
+              //   //   //       node.className?.includes("x-watermark-content")
+              //   //   //   ).length > 0
+              //   //   // ) {
+              //   //   //   this._do();
+              //   //   // }
+              this._do();
+            });
+          }, 100)
+        );
+
+        // 选择目标节点
+        const target =
+          (this._options.parentSelector
+            ? document.querySelector(this._options.parentSelector)
+            : this._options.parentNode) || document.body;
+
+        this._preventObs.observe(target, {
+          attributes: true,
+          subtree: true,
+          childList: true,
+          characterData: true,
+          attributeOldValue: true,
+          characterDataOldValue: true
+        });
+      } else {
+        console.warn(
+          `${WARN} You have set 'options.prevent', but it seems that your current env does not support MutationObserver. You may need to do it manually.`
+        );
+      }
+    }
+
     return this;
   }
 
@@ -375,11 +476,17 @@ class Watermark {
    * @param {object | undefined} opts
    */
   reload(str, opts) {
+    this.content = str;
     if (opts && typeof opts === "object") {
-      this._options = Object.assign({}, defaultOptions, opts);
+      this._options = Object.assign(
+        {},
+        defaultOptions,
+        { id: generateRandomId() },
+        opts
+      );
     }
     this.remove();
-    return this.init(str || this.content, this._options);
+    return this.init(this.content, this._options);
   }
 
   /**
@@ -392,125 +499,25 @@ class Watermark {
   }
 
   _do() {
-    const o = Object.assign({}, this._options);
-
     // 根据倍数计算各种数值
-    if (typeof o.ratio === "number" && o.ratio !== 1) {
-      o.top *= o.ratio;
-      o.left *= o.ratio;
-      o.xSpace *= o.ratio;
-      o.ySpace *= o.ratio;
-      o.fontsize *= o.ratio;
+    if (typeof this._options.ratio === "number" && this._options.ratio !== 1) {
+      this._options.top *= this._options.ratio;
+      this._options.left *= this._options.ratio;
+      this._options.xSpace *= this._options.ratio;
+      this._options.ySpace *= this._options.ratio;
+      this._options.fontsize *= this._options.ratio;
 
       // 单独计算宽高
-      if (typeof o.width === "number") {
-        o.width *= o.ratio;
+      if (typeof this._options.width === "number") {
+        this._options.width *= this._options.ratio;
       }
 
-      if (typeof o.height === "number") {
-        o.height *= o.ratio;
-      }
-    }
-
-    this.base64 = setWatermark(this.content, o);
-
-    if (o.observer) {
-      const MutationObserver =
-        window.MutationObserver || window.WebKitMutationObserver;
-
-      if (MutationObserver) {
-        this._observerObs = new MutationObserver(mutations => {
-          // 在回调函数中检查每个 mutation
-          mutations.forEach(mutation => {
-            // 如果属性有变化
-            if (mutation.type === "attributes") {
-              // 如果是宽高发生了变化
-              if (
-                mutation.attributeName === "clientWidth" ||
-                mutation.attributeName === "clientHeight" ||
-                mutation.attributeName === "style"
-              ) {
-                this.reload();
-              }
-            }
-          });
-        });
-
-        // 选择目标节点
-        const target =
-          o.observerNode ||
-          (o.parentSelector
-            ? document.querySelector(o.parentSelector)
-            : o.parentNode);
-        this._observerObs.observe(target, { attributes: true });
-      } else {
-        console.warn(
-          `${WARN} You have set 'options.observer', but it seems that your current env does not support MutationObserver. You may need to refresh manually.`
-        );
+      if (typeof this._options.height === "number") {
+        this._options.height *= this._options.ratio;
       }
     }
 
-    if (o.prevent) {
-      // 监听水印修改，防止被篡改
-      const MutationObserver =
-        window.MutationObserver || window.WebKitMutationObserver;
-
-      if (MutationObserver) {
-        this._preventObs = new MutationObserver(mutations => {
-          mutations.forEach(mutation => {
-            // 判断 className 是否包含 watermark-container 或 watermark-content
-            if (
-              mutation.type === "attributes" &&
-              mutation.attributeName === "style" &&
-              (mutation.target?.className.includes("watermark-container") ||
-                mutation.target?.className.includes("watermark-content"))
-            ) {
-              this.reload();
-            } else if (
-              // 删除 class
-              mutation.type === "attributes" &&
-              mutation.attributeName === "class" &&
-              mutation.oldValue &&
-              (mutation.oldValue?.includes("watermark-container") ||
-                mutation.oldValue?.includes("watermark-content"))
-            ) {
-              this.reload();
-            } else if (
-              // 判断删除
-              mutation.type === "childList" &&
-              mutation.removedNodes.length > 0 &&
-              Array.from(mutation.removedNodes).filter(
-                node =>
-                  node.className?.includes("watermark-container") ||
-                  node.className?.includes("watermark-content")
-              ).length > 0
-            ) {
-              this.reload();
-            }
-          });
-        });
-
-        // 选择目标节点
-        const target =
-          (o.parentSelector
-            ? document.querySelector(o.parentSelector)
-            : o.parentNode) || document.body;
-
-        this._preventObs.observe(target, {
-          attributes: true,
-          subtree: true,
-          childList: true,
-          characterData: true,
-          attributeOldValue: true,
-          characterDataOldValue: true,
-          attributeFilter: ["style", "class"]
-        });
-      } else {
-        console.warn(
-          `${WARN} You have set 'options.prevent', but it seems that your current env does not support MutationObserver. You may need to do it manually.`
-        );
-      }
-    }
+    this.base64 = setWatermark(this.content, this._options);
   }
 
   _dispose() {
@@ -524,9 +531,31 @@ class Watermark {
       this._preventObs = null;
     }
 
-    window.removeEventListener("resize", () => this._do());
+    window.removeEventListener("resize", this._do);
   }
 }
 
 export const XWatermark = Watermark;
 export default Watermark;
+
+function throttle(func, limit) {
+  let inThrottle;
+  return function () {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}
+
+function generateRandomId() {
+  return (
+    "x-watermark-" +
+    Math.floor(Math.random() * 0xffffff)
+      .toString(16)
+      .padStart(6, "0")
+  );
+}

@@ -47,6 +47,9 @@
     <div class="box-4 center" style="width: 200px; height: 100px; display: inline-flex;">4</div>
     <div class="box-5 center" style="height: 100px;">5</div>
 
+    <div id="root"></div>
+
+
     <script src="/dist/index.js"></script>
 
     <script>
@@ -59,13 +62,42 @@
 
         const wm1 = new XWatermark.XWatermark();
         wm1.init('box-1', {
-            id: 'box-1',
             parentSelector: '.box-1',
             xSpace: 20,
             ySpace: 20,
             top: 50,
             width: 30
         });
+
+        const wm2 = new XWatermark.XWatermark();
+        wm2.init('THIS IS ROOT WM', {
+            parentSelector: '#root',
+            prevent: true
+        });
+    </script>
+
+    <script>
+        function createNestedElement(depth, count) {
+            if (depth === 0 || count === 0) {
+                return null;
+            }
+
+            const parent = document.createElement('div');
+            parent.textContent = `Depth: ${depth}, Count: ${count}`;
+
+            const childCount = Math.ceil(count / depth);
+            for (let i = 0; i < childCount; i++) {
+                const child = createNestedElement(depth - 1, count - i);
+                if (child) {
+                    parent.appendChild(child);
+                }
+            }
+
+            return parent;
+        }
+
+        const root = createNestedElement(20, 10);
+        document.querySelector('#root').appendChild(root);
     </script>
 </body>
 
