@@ -72,22 +72,24 @@ declare module "@xpyjs/watermark" {
      * 平铺模式。支持: normal(默认，简写n) | horizontal(横向平铺，h、x) | vertical(纵向平铺， v、y) | stagger(交错，s;
      */
     mode:
-      | "normal"
-      | "horizontal"
-      | "vertical"
-      | "stagger"
-      | "n"
-      | "h"
-      | "x"
-      | "v"
-      | "y"
-      | "s";
+    | "normal"
+    | "horizontal"
+    | "vertical"
+    | "stagger"
+    | "n"
+    | "h"
+    | "x"
+    | "v"
+    | "y"
+    | "s";
     /**
      * 水印插件挂载的父元素element,不输入则默认挂在body上
      */
     parentNode: Element | null;
     /**
      * 水印插件挂载的父元素选择器，与 `document.querySelector` 内容保持一致。 与 parentNode 二选一即可，优先级 parentSelector > parentNode
+     *
+     * @note v1.0.10+ 优先读取 parentSelector，如果传了 parentSelector，parentNode 会被忽略。这意味着，如果 parentSelector 传的是一个不存在的元素，那么水印将不会被添加到 body 上，除非删除 parentSelector 属性，才会使用 parentNode
      */
     parentSelector: string;
     /**

@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2023-12-25 18:03:53
+ * @LastEditTime: 2024-01-24 14:42:17
  * @Description: 生成水印
  */
 
@@ -114,17 +114,18 @@ function drawText(ctx, text, x, y, maxWidth, lineHeight, rotate) {
 
 /**
  * 生成水印
+ * @param {object} dom
  * @param {string} str
  * @param {object} options
  * @returns base64
  */
-const setWatermark = (str, options) => {
-  const id = options.id;
-  const dom =
-    (options.parentSelector
-      ? document.querySelector(options.parentSelector)
-      : options.parentNode) || document.body;
+const setWatermark = (dom, str, options) => {
+  if (!dom) {
+    console.error(`${WARN} Could not load watermark. Dom is null. content:`, str);
+    return;
+  }
 
+  const id = options.id;
   // 如果已经存在水印，则先删除
   deleteElement(id);
 
@@ -221,9 +222,8 @@ const setWatermark = (str, options) => {
     str,
     0,
     (options.angle < 0 ? 1 : 0) *
-      options.width *
-      Math.sin((Math.abs(options.angle) * Math.PI) / 180) +
-      lineHeight * (4 / 5), // bottom 对齐
+    options.width *
+    Math.sin((Math.abs(options.angle) * Math.PI) / 180) + lineHeight * (4 / 5), // bottom 对齐
     options.width,
     lineHeight,
     options.angle
@@ -292,9 +292,7 @@ const setWatermark = (str, options) => {
     case "s":
       div.style.backgroundImage = `url(${base64Url}), url(${base64Url})`;
       div.style.backgroundRepeat = "repeat, repeat";
-      div.style.backgroundPosition = `0 0, ${(options.width + spaceX) / 2}px ${
-        (options.height + spaceY) / 2
-      }px`;
+      div.style.backgroundPosition = `0 0, ${(options.width + spaceX) / 2}px ${(options.height + spaceY) / 2}px`;
       break;
     case "normal":
     case "n":
@@ -303,9 +301,7 @@ const setWatermark = (str, options) => {
   }
 
   // 最后设置背景大小
-  div.style.backgroundSize = `${options.width + spaceX}px ${
-    options.height + spaceY
-  }px`;
+  div.style.backgroundSize = `${options.width + spaceX}px ${options.height + spaceY}px`;
 
   // [test]
   if (__DEV__) {
@@ -322,6 +318,8 @@ const setWatermark = (str, options) => {
 class Watermark {
   _observerObs = null;
   _preventObs = null;
+
+  _targetNode = null;
 
   /**
    * 生成的水印 base64 图片
@@ -367,6 +365,18 @@ class Watermark {
     );
     this.content = str;
 
+    this._targetNode = this._options.parentSelector
+      ? document.querySelector(this._options.parentSelector)
+      : this._options.parentNode;
+
+    if (!this._targetNode) {
+      console.warn(
+        `${WARN} You have set 'options.parentSelector': (${this._options.parentSelector}), but it seems that the selector does not match any element. You may need to refresh manually or change/delete the selector param.`
+      );
+
+      return
+    }
+
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => this._do());
     } else {
@@ -391,10 +401,7 @@ class Watermark {
 
         // 选择目标节点
         const target =
-          this._options.observerNode ||
-          (this._options.parentSelector
-            ? document.querySelector(this._options.parentSelector)
-            : this._options.parentNode);
+          this._options.observerNode || this._targetNode;
         this._observerObs.observe(target, { attributes: true });
       } else {
         console.warn(
@@ -412,47 +419,13 @@ class Watermark {
         this._preventObs = new MutationObserver(
           throttle(mutations => {
             mutations.forEach(mutation => {
-              //   //   // 判断 className 是否包含 x-watermark-container 或 x-watermark-content
-              //   //   // if (
-              //   //   //   mutation.type === "attributes" &&
-              //   //   //   mutation.attributeName === "style" &&
-              //   //   //   (mutation.target?.className.includes("x-watermark-container") ||
-              //   //   //     mutation.target?.className.includes("x-watermark-content"))
-              //   //   // ) {
-              //   //   //   this._do();
-              //   //   // } else if (
-              //   //   //   // 删除 class
-              //   //   //   mutation.type === "attributes" &&
-              //   //   //   mutation.attributeName === "class" &&
-              //   //   //   mutation.oldValue &&
-              //   //   //   (mutation.oldValue?.includes("x-watermark-container") ||
-              //   //   //     mutation.oldValue?.includes("x-watermark-content"))
-              //   //   // ) {
-              //   //   //   this._do();
-              //   //   // } else if (
-              //   //   //   // 判断删除
-              //   //   //   mutation.type === "childList" &&
-              //   //   //   mutation.removedNodes.length > 0 &&
-              //   //   //   Array.from(mutation.removedNodes).filter(
-              //   //   //     node =>
-              //   //   //       node.className?.includes("x-watermark-container") ||
-              //   //   //       node.className?.includes("x-watermark-content")
-              //   //   //   ).length > 0
-              //   //   // ) {
-              //   //   //   this._do();
-              //   //   // }
               this._do();
             });
           }, 100)
         );
 
         // 选择目标节点
-        const target =
-          (this._options.parentSelector
-            ? document.querySelector(this._options.parentSelector)
-            : this._options.parentNode) || document.body;
-
-        this._preventObs.observe(target, {
+        this._preventObs.observe(this._targetNode, {
           attributes: true,
           subtree: true,
           childList: true,
@@ -476,6 +449,8 @@ class Watermark {
    * @param {object | undefined} opts
    */
   reload(str, opts) {
+    this.remove();
+
     this.content = str;
     if (opts && typeof opts === "object") {
       this._options = Object.assign(
@@ -485,7 +460,7 @@ class Watermark {
         opts
       );
     }
-    this.remove();
+
     return this.init(this.content, this._options);
   }
 
@@ -517,7 +492,7 @@ class Watermark {
       }
     }
 
-    this.base64 = setWatermark(this.content, this._options);
+    this.base64 = setWatermark(this._targetNode, this.content, this._options);
   }
 
   _dispose() {

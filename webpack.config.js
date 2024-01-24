@@ -56,7 +56,8 @@ module.exports = {
         publicPath: "/dist/"
       }
     ],
-    port: 9000,
+    port: 9001,
     hot: true
-  }
+  },
+  watch: true
 };
