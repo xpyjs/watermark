@@ -83,7 +83,7 @@ declare module "@xpyjs/watermark" {
     | "y"
     | "s";
     /**
-     * 水印插件挂载的父元素element,不输入则默认挂在body上
+     * 水印插件挂载的父元素element。不输入，并且和没有 parentSelector 参数，则默认挂在body上
      */
     parentNode: Element | null;
     /**
@@ -141,7 +141,7 @@ declare module "@xpyjs/watermark" {
     /**
      * 重载水印。不传参则使用上一次的参数
      */
-    reload(str: string, opts?: Partial<Options>): Watermark;
+    reload(str?: string, opts?: Partial<Options>): Watermark;
 
     /**
      * 移除水印

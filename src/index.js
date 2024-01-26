@@ -3,7 +3,7 @@
  * @Author: JeremyJone
  * @Date: 2023-07-26 13:33:14
  * @LastEditors: JeremyJone
- * @LastEditTime: 2024-01-24 14:42:17
+ * @LastEditTime: 2024-01-26 15:28:40
  * @Description: 生成水印
  */
 
@@ -357,6 +357,11 @@ class Watermark {
    * @param {object} opts
    */
   init(str, opts = {}) {
+    if (!str) {
+      console.error(`${WARN} You have not set the content of watermark.`);
+      return;
+    }
+
     this._options = Object.assign(
       {},
       defaultOptions,
