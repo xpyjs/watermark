@@ -388,6 +388,48 @@ class Watermark {
       this._do();
     }
 
+    this.start();
+
+    return this;
+  }
+
+  /**
+   * 重载水印。不传参则使用上一次的参数
+   * @param {string} str
+   * @param {object | undefined} opts
+   */
+  reload(str, opts) {
+    this.remove();
+
+    if (str) {
+      this.content = str;
+    }
+
+    if (opts && typeof opts === "object") {
+      this._options = Object.assign(
+        {},
+        defaultOptions,
+        { id: generateRandomId() },
+        opts
+      );
+    }
+
+    return this.init(this.content, this._options);
+  }
+
+  /**
+   * 移除水印
+   */
+  remove() {
+    this._dispose();
+
+    return deleteElement(this._options.id);
+  }
+
+  /**
+   * 开始监控
+   */
+  start() {
     window.addEventListener("resize", () => this._do());
 
     if (this._options.observer) {
@@ -444,41 +486,13 @@ class Watermark {
         );
       }
     }
-
-    return this;
   }
 
   /**
-   * 重载水印。不传参则使用上一次的参数
-   * @param {string} str
-   * @param {object | undefined} opts
+   * 停止监控
    */
-  reload(str, opts) {
-    this.remove();
-
-    if (str) {
-      this.content = str;
-    }
-
-    if (opts && typeof opts === "object") {
-      this._options = Object.assign(
-        {},
-        defaultOptions,
-        { id: generateRandomId() },
-        opts
-      );
-    }
-
-    return this.init(this.content, this._options);
-  }
-
-  /**
-   * 移除水印
-   */
-  remove() {
+  stop() {
     this._dispose();
-
-    return deleteElement(this._options.id);
   }
 
   _do() {

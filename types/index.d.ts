@@ -147,5 +147,15 @@ declare module "@xpyjs/watermark" {
      * 移除水印
      */
     remove(): boolean;
+
+    /**
+     * 启动所有事件监听
+     */
+    start(): void;
+
+    /**
+     * 停止所有事件监听
+     */
+    stop(): void;
   }
 }

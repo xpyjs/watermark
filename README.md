@@ -1,9 +1,8 @@
 # X-Watermark
 
-
-<p align="center"> 
+<p align="center">
    <img width="180" src="./logo.png" alt="logo">
-</p> 
+</p>
 <br/>
 
 ![](https://img.shields.io/npm/v/@xpyjs/watermark.svg) ![](https://badgen.net/npm/dt/@xpyjs/watermark) ![](https://img.shields.io/npm/l/@xpyjs/watermark.svg)
@@ -32,16 +31,31 @@
 <script src="https://cdn.jsdelivr.net/npm/@xpyjs/watermark"></script>
 ```
 
+默认初始化：
+
+```js
+const watermark = new XWatermark.XWatermark('Watermark Text', {
+  parentSelector: '#container' // 优先级高于 parentNode
+});
+
+// or
+const watermark = new XWatermark.XWatermark('Watermark Text', {
+  parentNode: document.getElementById('container')
+});
+```
+
+也可以通过 `init` 方法手动初始化：
+
 ```js
 const watermark = new XWatermark.XWatermark();
 
 watermark.init('Watermark Text', {
-  parentSelector: '#container'; // 优先级高于 parentNode
+  parentSelector: '#container' // 优先级高于 parentNode
 });
 
 // or
 watermark.init('Watermark Text', {
-  parentNode: document.getElementById('container');
+  parentNode: document.getElementById('container')
 });
 ```
 
@@ -69,16 +83,44 @@ import XWatermark from '@xpyjs/watermark';
 const watermark = new XWatermark();
 
 watermark.init('Watermark Text', {
-  parentSelector: '#container'; // 优先级高于 parentNode
+  parentSelector: '#container' // 优先级高于 parentNode
 });
 
 // or
 watermark.init('Watermark Text', {
-  parentNode: document.getElementById('container');
+  parentNode: document.getElementById('container')
 });
 ```
 
 以上代码将在 id 为 `container` 的 DOM 元素中应用一个平铺样式的水印，水印内容为 "Watermark Text"。
+
+### 高级
+
+`X-Watermark` 可以提供自动监听，包括大小变化时重载和内容修改时重载。
+
+```javascript
+const watermark = new XWatermark();
+
+watermark.init('Watermark Text', {
+  parentSelector: '#container',
+  prevent: true,  // 防止被删除
+  observer: true  // 监听大小变化
+});
+```
+
+有些时候，我们应用在了某个 DOM 元素上，比如表格上。当表格内容频繁变化时，水印的监听会导致性能问题。这时，可以使用停起事件来手动控制：
+
+```javascript
+const watermark = new XWatermark({...});
+
+// 停止监听
+watermark.stop();
+
+// 1秒后重新监听
+setTimeout(() => {
+  watermark.start();
+}, 1000);
+```
 
 ## 配置选项
 

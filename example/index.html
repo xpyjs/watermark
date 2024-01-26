@@ -47,6 +47,12 @@
     <div class="box-4 center" style="width: 200px; height: 100px; display: inline-flex;">4</div>
     <div class="box-5 center" style="height: 100px;">5</div>
 
+    <div>
+        <button onclick="recreate()">重新生成</button>
+        <button onclick="wm2.start()">开始</button>
+        <button onclick="wm2.stop()">停止</button>
+    </div>
+
     <div id="root"></div>
 
 
@@ -72,7 +78,8 @@
         const wm2 = new XWatermark.XWatermark();
         wm2.init('THIS IS ROOT WM', {
             parentSelector: '#root',
-            prevent: true
+            prevent: true,
+            // observer: true
         });
     </script>
 
@@ -96,8 +103,15 @@
             return parent;
         }
 
-        const root = createNestedElement(20, 10);
+        const root = createNestedElement(10, 10);
         document.querySelector('#root').appendChild(root);
+
+        function recreate() {
+            const root = document.querySelector('#root');
+            // root.innerHTML = '';
+            const newRoot = createNestedElement(10, 12);
+            root.appendChild(newRoot);
+        }
     </script>
 </body>
 
