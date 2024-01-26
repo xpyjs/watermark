@@ -451,7 +451,10 @@ class Watermark {
   reload(str, opts) {
     this.remove();
 
-    this.content = str;
+    if (str) {
+      this.content = str;
+    }
+
     if (opts && typeof opts === "object") {
       this._options = Object.assign(
         {},
